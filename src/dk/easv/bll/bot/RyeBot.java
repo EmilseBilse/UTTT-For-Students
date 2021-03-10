@@ -64,8 +64,6 @@ public class RyeBot implements IBot {
             returnMoves.add(new Move(4,4));
         }
         else {
-            String[][] macroBoard = state.getField().getMacroboard();
-            
             for (IMove move : moves) {
                 for (IMove currentMove : outerMiddleMoves) {
                     if (move.equals(currentMove)) {
