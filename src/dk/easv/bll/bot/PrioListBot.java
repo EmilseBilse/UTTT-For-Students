@@ -7,7 +7,7 @@ import dk.easv.bll.move.IMove;
 import dk.easv.bll.move.Move;
 
 
-public class LocalPrioritisedListBot implements IBot {
+public class PrioListBot implements IBot {
 
     private static final String BOTNAME = "Local Prio ListBot";
     // Moves {row, col} in order of preferences. {0, 0} at top-left corner

@@ -6,9 +6,9 @@ import dk.easv.bll.move.IMove;
 
 import java.util.ArrayList;
 import java.util.List;
-
-public class PrioListOnSteroids extends LocalPrioritisedListBot{
-    private static final String BOTNAME = "PrioList on Steroids";
+//Jeppes localPrioOnSteroids bot
+public class OneLayerBot extends PrioListBot {
+    private static final String BOTNAME = "Jeppes one Layer bot";
     public static void main(String[] args){
         GameState gs = new GameState();
         gs.setMoveNumber(11);
@@ -38,7 +38,7 @@ public class PrioListOnSteroids extends LocalPrioritisedListBot{
             }
         }
         System.out.println(gs.getField().toString());
-        List<IMove> moves= new PrioListOnSteroids().getWinningMoves(gs);
+        List<IMove> moves= new OneLayerBot().getWinningMoves(gs);
         System.out.println(moves);
 
     }

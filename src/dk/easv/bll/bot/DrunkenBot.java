@@ -7,13 +7,11 @@ package dk.easv.bll.bot;
  */
 
 
-import dk.easv.bll.bot.LocalPrioritisedListBot;
-
 /**
  *
  * @author jeppjleemoritzled
  */
-public class DrunkenBot extends LocalPrioritisedListBot {
+public class DrunkenBot extends PrioListBot {
     private static final String BOTNAME="Drunken Bot";
     
     // Drunken bot is worse than random but wins against it's super class
