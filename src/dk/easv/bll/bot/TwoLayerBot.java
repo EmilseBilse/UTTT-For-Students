@@ -19,8 +19,6 @@ public class TwoLayerBot implements IBot {
     public IMove doMove(IGameState state) {
         int thisPlayer = getCurrentPlayer(state);
         int oppPlayer=(thisPlayer +1) %2;
-        System.out.print(oppPlayer);
-
         List<IMove> winMoves = getWinningMoves(state, thisPlayer);
         if(!winMoves.isEmpty()) {
             for(IMove currentMove: winMoves) {
