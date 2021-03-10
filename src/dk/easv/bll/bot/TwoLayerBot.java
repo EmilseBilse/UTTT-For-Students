@@ -8,22 +8,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-//virker ikke
+//jeg tror at den virker nu
 public class TwoLayerBot implements IBot {
 
-    private static final String BOTNAME = "Two Layer bot(ik færdig)";
+    private static final String BOTNAME = "Two Layer bot(Jeg tror at den virker)";
     Random random = new Random();
 
     @Override
     public IMove doMove(IGameState state) {
         List<IMove> winMoves = getWinningMoves(state);
         List<IMove> loseMoves = getLosingMoves(state);
-        if(!winMoves.isEmpty()) {
-            if(!loseMoves.isEmpty()){
-                
+        if(!winMoves.isEmpty() || !loseMoves.isEmpty()) {
+            if(!winMoves.isEmpty()){
+                return winMoves.get(0);
+            }else {
+                return loseMoves.get(0);
             }
 
-            return winMoves.get(0);
+
         }
 
 
@@ -98,18 +100,19 @@ public class TwoLayerBot implements IBot {
 
     // Compile a list of all available losing moves
     private List<IMove> getLosingMoves(IGameState state){
-        String player = "0";
-        if(state.getMoveNumber()%2!=0)
-            player="1";
+        String player = "1";
+        if(state.getMoveNumber()%2==1)
+            player="0";
+
 
         List<IMove> avail = state.getField().getAvailableMoves();
 
-        List<IMove> winningMoves = new ArrayList<>();
+        List<IMove> losingMoves = new ArrayList<>();
         for (IMove move:avail) {
             if(isWinningMove(state,move,player))
-                winningMoves.add(move);
+                losingMoves.add(move);
         }
-        return winningMoves;
+        return losingMoves;
     }
 
     @Override
