@@ -4,15 +4,16 @@ import dk.easv.bll.game.GameManager;
 import dk.easv.bll.game.GameState;
 import dk.easv.bll.game.IGameState;
 import dk.easv.bll.move.IMove;
+import dk.easv.bll.move.Move;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-//virker ikke
-public class TwoLayerBot implements IBot {
 
-    private static final String BOTNAME = "Two Layer bot(ik færdig)";
+public class RyeBot implements IBot {
+
+    private static final String BOTNAME = "Rye Bot";
     Random random = new Random();
 
     @Override
@@ -22,27 +23,62 @@ public class TwoLayerBot implements IBot {
         List<IMove> winMoves = getWinningMoves(state, thisPlayer);
         if(!winMoves.isEmpty()) {
             for(IMove currentMove: winMoves) {
-                GameState gs = new GameState(state);
-                GameManager gm = new GameManager(gs);
-                gm.updateGame(currentMove);
-                List<IMove> loseMoves = getWinningMoves(gm.getCurrentState(), oppPlayer);
-                if(loseMoves.isEmpty()){
-                    return currentMove;
-                }
-
+                return currentMove;
             }
         }
         else{
             List<IMove> oppWinMoves = getWinningMoves(state, oppPlayer);
-            System.out.print(oppWinMoves.size());
             if(!oppWinMoves.isEmpty()) {
                 return oppWinMoves.get(0);
             }
         }
-
+        List<IMove> prefMoves = getPreferredMoves(state);
+        if(!prefMoves.isEmpty()){
+            return prefMoves.get(random.nextInt(prefMoves.size()));
+        }
 
         return state.getField().getAvailableMoves().get(random.nextInt(state.getField().getAvailableMoves().size()));
     }
+
+    private List<IMove> getPreferredMoves(IGameState state) {
+        List<IMove> moves = state.getField().getAvailableMoves();
+        List<IMove> returnMoves = new ArrayList<>();
+
+        List<IMove> outerMiddleMoves = new ArrayList<>();
+        for (int j : new int[]{0, 2}) {
+            outerMiddleMoves.add(new Move(j,1));
+        }
+        for (int i : new int[]{0, 2}) {
+            outerMiddleMoves.add(new Move(1, i));
+        }
+
+        List<IMove> cornerMoves = new ArrayList<>();
+        for (int i : new int[]{0, 2, 2}) {
+            cornerMoves.add(new Move(i,0));
+        }
+        cornerMoves.add(new Move(2,2));
+
+        IMove middleMove = new Move(1,1);
+
+        if(state.getMoveNumber() == 0) {
+            returnMoves.add(new Move(4,4));
+        }
+        else {
+            String[][] macroBoard = state.getField().getMacroboard();
+            
+            for (IMove move : moves) {
+                for (IMove currentMove : outerMiddleMoves) {
+                    if (move.equals(currentMove)) {
+                        returnMoves.add(currentMove);
+                    }
+                }
+            }
+        }
+
+
+        return returnMoves;
+
+    };
 
     private boolean isWinningMove(String[][] board, IMove move, String player){
         boolean isRowWin = true;
