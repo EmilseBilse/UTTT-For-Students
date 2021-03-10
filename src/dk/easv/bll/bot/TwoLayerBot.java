@@ -1,6 +1,5 @@
 package dk.easv.bll.bot;
 
-import dk.easv.bll.game.GameManager;
 import dk.easv.bll.game.GameState;
 import dk.easv.bll.game.IGameState;
 import dk.easv.bll.move.IMove;
@@ -9,44 +8,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-//virker ikke
+//jeg tror at den virker nu
 public class TwoLayerBot implements IBot {
 
-    private static final String BOTNAME = "Two Layer bot(ik færdig)";
+    private static final String BOTNAME = "Two Layer bot(Jeg tror at den virker)";
     Random random = new Random();
 
     @Override
     public IMove doMove(IGameState state) {
-        int thisPlayer = getCurrentPlayer(state);
-        int oppPlayer=(thisPlayer +1) %2;
-        System.out.print(oppPlayer);
-
-        List<IMove> winMoves = getWinningMoves(state, thisPlayer);
-        if(!winMoves.isEmpty()) {
-            for(IMove currentMove: winMoves) {
-                GameState gs = new GameState(state);
-                GameManager gm = new GameManager(gs);
-                gm.updateGame(currentMove);
-                List<IMove> loseMoves = getWinningMoves(gm.getCurrentState(), oppPlayer);
-                if(loseMoves.isEmpty()){
-                    return currentMove;
-                }
-
+        List<IMove> winMoves = getWinningMoves(state);
+        List<IMove> loseMoves = getLosingMoves(state);
+        if(!winMoves.isEmpty() || !loseMoves.isEmpty()) {
+            if(!winMoves.isEmpty()){
+                return winMoves.get(0);
+            }else {
+                return loseMoves.get(0);
             }
-        }
-        else{
-            List<IMove> oppWinMoves = getWinningMoves(state, oppPlayer);
-            System.out.print(oppWinMoves.size());
-            if(!oppWinMoves.isEmpty()) {
-                return oppWinMoves.get(0);
-            }
+
+
         }
 
 
         return state.getField().getAvailableMoves().get(random.nextInt(state.getField().getAvailableMoves().size()));
     }
 
-    private boolean isWinningMove(String[][] board, IMove move, String player){
+    private boolean isWinningMove(IGameState state, IMove move, String player){
+        String[][] board = state.getField().getBoard();
         boolean isRowWin = true;
         // Row checking
         int startX = move.getX()-(move.getX()%3);
@@ -96,21 +83,36 @@ public class TwoLayerBot implements IBot {
     }
 
     // Compile a list of all available winning moves
-    private List<IMove> getWinningMoves(IGameState state, int chosenPlayer){
-        String player = String.valueOf(chosenPlayer);
+    private List<IMove> getWinningMoves(IGameState state){
+        String player = "1";
+        if(state.getMoveNumber()%2==0)
+            player="0";
 
         List<IMove> avail = state.getField().getAvailableMoves();
 
         List<IMove> winningMoves = new ArrayList<>();
         for (IMove move:avail) {
-            if(isWinningMove(state.getField().getBoard(),move,player))
+            if(isWinningMove(state,move,player))
                 winningMoves.add(move);
         }
         return winningMoves;
     }
 
-    private int getCurrentPlayer(IGameState state){
-        return state.getMoveNumber()%2;
+    // Compile a list of all available losing moves
+    private List<IMove> getLosingMoves(IGameState state){
+        String player = "1";
+        if(state.getMoveNumber()%2==1)
+            player="0";
+
+
+        List<IMove> avail = state.getField().getAvailableMoves();
+
+        List<IMove> losingMoves = new ArrayList<>();
+        for (IMove move:avail) {
+            if(isWinningMove(state,move,player))
+                losingMoves.add(move);
+        }
+        return losingMoves;
     }
 
     @Override
