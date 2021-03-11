@@ -23,7 +23,7 @@ public class RyeBot implements IBot {
 
     public IMove calcMove(IGameState state) {
         int thisPlayer = getCurrentPlayer(state);
-        int oppPlayer=getOppPlayer(state);
+        int oppPlayer=(thisPlayer +1) %2;
         List<IMove> winMoves = getWinningMoves(state, thisPlayer);
 
         //if the bot is the starting player it goes for the middle
@@ -33,14 +33,12 @@ public class RyeBot implements IBot {
 
         //checks local Wins
         if(!winMoves.isEmpty()) {
-/*
             for(IMove currentMove: winMoves) {
                 GameState gs = new GameState(state);
                 GameManager gm = new GameManager(gs);
-                gm.updateGame();
+                gm.updateGame(currentMove);
                 //If is able to win globally do it
                 if(gm.getGameOver().equals(GameManager.GameOverState.Win)) {
-                    System.out.println("game winning move");
                     return currentMove;
                 }
                 //check if a local win results in the opponent being able to win globally next time, if not do it
@@ -50,43 +48,33 @@ public class RyeBot implements IBot {
                     GameManager gm1 = new GameManager(gs1);
                     gm1.updateGame(currentOppMove);
                      if(!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
-                         System.out.println("win move");
                          return currentMove;
                      }
                 }
             }
-
-
- */
-
-            return winMoves.get(0);
         }
 
         //checks local blocking
-
+        else{
             List<IMove> oppWinMoves = getWinningMoves(state, oppPlayer);
             if(!oppWinMoves.isEmpty()) {
-                /*
                 for(IMove currentOppMove: oppWinMoves) {
                     GameState gs = new GameState(state);
                     GameManager gm = new GameManager(gs);
                     gm.updateGame(currentOppMove);
                     //checks if the local block vil result in the opponentWinning, if not returns the move
                     if(gm.getGameOver().equals(GameManager.GameOverState.Win)){
-                        System.out.println("block move");
                         return currentOppMove;
                     }
                 }
-
-                 */
-                return oppWinMoves.get(0);
             }
-
+        }
 
         List<IMove> prefMoves = getPreferredMoves(state);
         if(!prefMoves.isEmpty()){
             return prefMoves.get(random.nextInt(prefMoves.size()));
         }
+
         return state.getField().getAvailableMoves().get(random.nextInt(state.getField().getAvailableMoves().size()));
     }
 
@@ -180,8 +168,7 @@ public class RyeBot implements IBot {
         return false;
     }
 
-    private boolean isWinningMove(IGameState state, IMove move, String player){
-        String[][] board = state.getField().getBoard();
+    private boolean isWinningMove(String[][] board, IMove move, String player){
         boolean isRowWin = true;
         // Row checking
         int startX = move.getX()-(move.getX()%3);
@@ -238,26 +225,14 @@ public class RyeBot implements IBot {
 
         List<IMove> winningMoves = new ArrayList<>();
         for (IMove move:avail) {
-            if(isWinningMove(state,move,player))
+            if(isWinningMove(state.getField().getBoard(),move,player))
                 winningMoves.add(move);
         }
         return winningMoves;
     }
 
     private int getCurrentPlayer(IGameState state){
-        int player = 1;
-        if(state.getMoveNumber()%2==0)
-            player=0;
-
-        return player;
-    }
-
-    private int getOppPlayer(IGameState state){
-        int player = 1;
-        if(state.getMoveNumber()%2==1)
-            player = 0;
-
-        return player;
+        return state.getMoveNumber()%2;
     }
 
     @Override
