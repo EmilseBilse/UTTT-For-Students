@@ -70,10 +70,7 @@ public class RyeBot implements IBot {
                     GameState gs = new GameState(state);
                     GameManager gm = new GameManager(gs);
                     gm.updateGame(currentOppMove);
-                    //checks if the local block vil result in the opponentWinning, if not returns the move
-                    if(gm.getGameOver().equals(GameManager.GameOverState.Win)){
-                        return currentOppMove;
-                    }
+                    return currentOppMove;
                 }
             }
         }
