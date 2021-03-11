@@ -70,7 +70,20 @@ public class RyeBot implements IBot {
                     GameState gs = new GameState(state);
                     GameManager gm = new GameManager(gs);
                     gm.updateGame(currentOppMove);
-                    return currentOppMove;
+                    List <IMove> oppWinMoves1 = getWinningMoves(gm.getCurrentState(), oppPlayer);
+                    if(oppWinMoves1.isEmpty()) {
+                        return currentOppMove;
+                    }
+                    for(IMove currentOppMove1: oppWinMoves1) {
+                        GameState gs1 = new GameState(gm.getCurrentState());
+                        GameManager gm1 = new GameManager(gs1);
+                        gm1.setCurrentPlayer(oppPlayer);
+                        gm1.updateGame(currentOppMove1);
+                        if(!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
+                            return currentOppMove;
+                        }
+                    }
+
                 }
             }
         }
