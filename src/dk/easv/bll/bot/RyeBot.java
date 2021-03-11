@@ -70,6 +70,8 @@ public class RyeBot implements IBot {
                     GameState gs = new GameState(state);
                     GameManager gm = new GameManager(gs);
                     gm.updateGame(currentOppMove);
+
+                    //checks that blocking an enemy wont give them opportunity to win
                     List <IMove> oppWinMoves1 = getWinningMoves(gm.getCurrentState(), oppPlayer);
                     if(oppWinMoves1.isEmpty()) {
                         return currentOppMove;

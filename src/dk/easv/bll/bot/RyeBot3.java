@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class RyeBot3 implements IBot {
 
-    private static final String BOTNAME = "Rye Bot???";
+    private static final String BOTNAME = "Rye Bot 3";
     Random random = new Random();
 
     @Override
