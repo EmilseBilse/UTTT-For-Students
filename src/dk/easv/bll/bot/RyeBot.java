@@ -18,20 +18,58 @@ public class RyeBot implements IBot {
 
     @Override
     public IMove doMove(IGameState state) {
+        return calcMove(state);
+    }
+
+    public IMove calcMove(IGameState state) {
         int thisPlayer = getCurrentPlayer(state);
         int oppPlayer=(thisPlayer +1) %2;
         List<IMove> winMoves = getWinningMoves(state, thisPlayer);
+
+        //if the bot is the starting player it goes for the middle
+        if(state.getMoveNumber() == 0) {
+            return(new Move(4,4));
+        }
+
+        //checks local Wins
         if(!winMoves.isEmpty()) {
             for(IMove currentMove: winMoves) {
-                return currentMove;
+                GameState gs = new GameState(state);
+                GameManager gm = new GameManager(gs);
+                gm.updateGame(currentMove);
+                //If is able to win globally do it
+                if(gm.getGameOver().equals(GameManager.GameOverState.Win)) {
+                    return currentMove;
+                }
+                //check if a local win results in the opponent being able to win globally next time, if not do it
+                List<IMove> oppWinMoves = getWinningMoves(gm.getCurrentState(), oppPlayer);
+                for(IMove currentOppMove: oppWinMoves) {
+                    GameState gs1 = new GameState(gm.getCurrentState());
+                    GameManager gm1 = new GameManager(gs1);
+                    gm1.updateGame(currentOppMove);
+                     if(!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
+                         return currentMove;
+                     }
+                }
             }
         }
+
+        //checks local blocking
         else{
             List<IMove> oppWinMoves = getWinningMoves(state, oppPlayer);
             if(!oppWinMoves.isEmpty()) {
-                return oppWinMoves.get(0);
+                for(IMove currentOppMove: oppWinMoves) {
+                    GameState gs = new GameState(state);
+                    GameManager gm = new GameManager(gs);
+                    gm.updateGame(currentOppMove);
+                    //checks if the local block vil result in the opponentWinning, if not returns the move
+                    if(gm.getGameOver().equals(GameManager.GameOverState.Win)){
+                        return currentOppMove;
+                    }
+                }
             }
         }
+
         List<IMove> prefMoves = getPreferredMoves(state);
         if(!prefMoves.isEmpty()){
             return prefMoves.get(random.nextInt(prefMoves.size()));
@@ -41,42 +79,94 @@ public class RyeBot implements IBot {
     }
 
     private List<IMove> getPreferredMoves(IGameState state) {
-        List<IMove> moves = state.getField().getAvailableMoves();
+        List<IMove> availableMoves = state.getField().getAvailableMoves();
         List<IMove> returnMoves = new ArrayList<>();
+        int thisPlayer = getCurrentPlayer(state);
+        int oppPlayer=(thisPlayer +1) %2;
 
         List<IMove> outerMiddleMoves = new ArrayList<>();
-        for (int j : new int[]{0, 2}) {
-            outerMiddleMoves.add(new Move(j,1));
-        }
-        for (int i : new int[]{0, 2}) {
-            outerMiddleMoves.add(new Move(1, i));
-        }
-
+            for (int j : new int[]{0, 2}) {
+                outerMiddleMoves.add(new Move(j,1));
+            }
+            for (int i : new int[]{0, 2}) {
+                outerMiddleMoves.add(new Move(1, i));
+            }
         List<IMove> cornerMoves = new ArrayList<>();
-        for (int i : new int[]{0, 2, 2}) {
-            cornerMoves.add(new Move(i,0));
-        }
-        cornerMoves.add(new Move(2,2));
-
+            for (int i : new int[]{0, 2, 2}) {
+                cornerMoves.add(new Move(i,0));
+            }
+            cornerMoves.add(new Move(2,2));
         IMove middleMove = new Move(1,1);
 
-        if(state.getMoveNumber() == 0) {
-            returnMoves.add(new Move(4,4));
+        // removes moves that let the opponent pick from the entire board next time (skal nok laves bedre)
+        List<IMove> smartMoves = new ArrayList<>();
+        for (IMove move: availableMoves) {
+            GameState gs = new GameState(state);
+            GameManager gm = new GameManager(gs);
+            gm.updateGame(move);
+            if(gm.getCurrentState().getField().getAvailableMoves().size()<9){
+                smartMoves.add(move);
+            }
         }
-        else {
-            for (IMove move : moves) {
-                for (IMove currentMove : outerMiddleMoves) {
-                    if (move.equals(currentMove)) {
-                        returnMoves.add(currentMove);
+        if(smartMoves.isEmpty()){
+            smartMoves = availableMoves;
+        }
+
+        //adds OuterMiddleMoves
+        for(IMove move:smartMoves) {
+            for(IMove outerMiddleMove: outerMiddleMoves) {
+                if(imovesMatching(move,outerMiddleMove)&&!returnMoves.contains(move)){
+                    GameState gs = new GameState(state);
+                    GameManager gm = new GameManager(gs);
+                    gm.updateGame(move);
+                    if(getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()){
+                        returnMoves.add(move);
+                    }
+                }
+            }
+        }
+        //adds CornerMoves
+        if(returnMoves.isEmpty()) {
+            for(IMove move:smartMoves) {
+                for(IMove cornerMove: cornerMoves) {
+                    if(imovesMatching(move,cornerMove)&&!returnMoves.contains(move)){
+                        GameState gs = new GameState(state);
+                        GameManager gm = new GameManager(gs);
+                        gm.updateGame(move);
+                        if(getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()){
+                            returnMoves.add(move);
+                        }
+                    }
+                }
+            }
+        }
+        //add middleMove
+        if(returnMoves.isEmpty()) {
+            for(IMove move: smartMoves) {
+                if(imovesMatching(move,middleMove) && !returnMoves.contains(move)) {
+                    GameState gs = new GameState(state);
+                    GameManager gm = new GameManager(gs);
+                    gm.updateGame(move);
+                    if (getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()) {
+                        returnMoves.add(move);
                     }
                 }
             }
         }
 
-
+        if(returnMoves.isEmpty()) {
+            returnMoves = smartMoves;
+        }
         return returnMoves;
 
-    };
+    }
+
+    private boolean imovesMatching (IMove move1, IMove move2){
+        if(move1.getX() == move2.getX() && move2.getX()== move2.getX()) {
+            return true;
+        }
+        return false;
+    }
 
     private boolean isWinningMove(String[][] board, IMove move, String player){
         boolean isRowWin = true;
