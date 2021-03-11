@@ -93,7 +93,6 @@ public class RyeBot3 implements IBot {
                     betterPrefMoves.add(currentPrefMove);
                 }
             }
-            System.out.println("pref move");
 
             return betterPrefMoves.get(random.nextInt(prefMoves.size()));
         }
