@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Random;
 
 
-public class RyeBot implements IBot {
+public class RyeBotTry2 implements IBot {
 
     private static final String BOTNAME = "Rye Bot";
     Random random = new Random();
