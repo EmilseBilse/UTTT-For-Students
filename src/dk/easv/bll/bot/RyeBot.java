@@ -160,7 +160,7 @@ public class RyeBot implements IBot {
             }
         }
 
-        
+
         //adds OuterMiddleMoves
         for(IMove move:smartMoves) {
             for(IMove outerMiddleMove: outerMiddleMoves) {
