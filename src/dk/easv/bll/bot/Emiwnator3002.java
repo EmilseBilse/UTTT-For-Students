@@ -24,8 +24,6 @@ public class Emiwnator3002 implements IBot{
                 }else {
                     return loseMoves.get(0);
                 }
-
-
             }
 
 
