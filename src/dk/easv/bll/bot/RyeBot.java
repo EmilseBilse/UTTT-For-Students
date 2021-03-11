@@ -1,5 +1,6 @@
 package dk.easv.bll.bot;
 
+import dk.easv.bll.field.IField;
 import dk.easv.bll.game.GameManager;
 import dk.easv.bll.game.GameState;
 import dk.easv.bll.game.IGameState;
@@ -53,7 +54,6 @@ public class RyeBot implements IBot {
                         GameState gs1 = new GameState(gm.getCurrentState());
                         GameManager gm1 = new GameManager(gs1);
                         gm1.updateGame(currentOppMove);
-                        System.out.print(gm1.getGameOver());
                         if (!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
                             return currentMove;
                         }
@@ -104,19 +104,23 @@ public class RyeBot implements IBot {
         int thisPlayer = getCurrentPlayer(state);
         int oppPlayer=(thisPlayer +1) %2;
 
-        List<IMove> outerMiddleMoves = new ArrayList<>();
-            for (int j : new int[]{0, 2}) {
-                outerMiddleMoves.add(new Move(j,1));
-            }
-            for (int i : new int[]{0, 2}) {
-                outerMiddleMoves.add(new Move(1, i));
-            }
-        List<IMove> cornerMoves = new ArrayList<>();
-            for (int i : new int[]{0, 2, 2}) {
-                cornerMoves.add(new Move(i,0));
-            }
-            cornerMoves.add(new Move(2,2));
-        IMove middleMove = new Move(1,1);
+        List<IMove> macroOuterMiddleMoves = new ArrayList<>();
+        macroOuterMiddleMoves.add(new Move(0, 1));
+        macroOuterMiddleMoves.add(new Move(2, 1));
+        macroOuterMiddleMoves.add(new Move(1, 0));
+        macroOuterMiddleMoves.add(new Move(1, 2));
+        List<IMove> outerMiddleMoves = upscaleMoves(macroOuterMiddleMoves);
+
+        List<IMove> macroCornerMoves = new ArrayList<>();
+        macroCornerMoves.add(new Move(0, 0));
+        macroCornerMoves.add(new Move(2, 0));
+        macroCornerMoves.add(new Move(2, 0));
+        macroCornerMoves.add(new Move(2,2));
+        List<IMove> cornerMoves = upscaleMoves(macroCornerMoves);
+
+        List<IMove> macroMiddleMoves = new ArrayList<>();
+        macroMiddleMoves.add(new Move(1,1));
+        List<IMove> middleMoves = upscaleMoves(macroMiddleMoves);
 
         // removes moves that let the opponent pick from the entire board next time (skal nok laves bedre)
         List<IMove> smartMoves = new ArrayList<>();
@@ -128,10 +132,11 @@ public class RyeBot implements IBot {
                 smartMoves.add(move);
             }
         }
+
         if(smartMoves.isEmpty()){
             smartMoves = availableMoves;
         }
-        System.out.print(smartMoves.size());
+
 
         //adds OuterMiddleMoves
         for(IMove move:smartMoves) {
@@ -163,13 +168,15 @@ public class RyeBot implements IBot {
         }
         //add middleMove
         if(returnMoves.isEmpty()) {
-            for(IMove move: smartMoves) {
-                if(imovesMatching(move,middleMove) && !returnMoves.contains(move)) {
-                    GameState gs = new GameState(state);
-                    GameManager gm = new GameManager(gs);
-                    gm.updateGame(move);
-                    if (getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()) {
-                        returnMoves.add(move);
+            for(IMove move:smartMoves) {
+                for(IMove middleMove: middleMoves) {
+                    if(imovesMatching(move,middleMove)&&!returnMoves.contains(move)){
+                        GameState gs = new GameState(state);
+                        GameManager gm = new GameManager(gs);
+                        gm.updateGame(move);
+                        if(getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()){
+                            returnMoves.add(move);
+                        }
                     }
                 }
             }
@@ -181,13 +188,31 @@ public class RyeBot implements IBot {
         return returnMoves;
 
     }
+    private List<IMove> upscaleMoves (List<IMove> moves) {
+        List<IMove> returnMoves = new ArrayList<>();
+        for(IMove move : moves){
+            int i = 3;
+            returnMoves.add(move);
+            returnMoves.add(new Move(move.getX(), move.getY()+i));
+            returnMoves.add(new Move(move.getX(), move.getY()+(i*2)));
+            returnMoves.add(new Move(move.getX()+i, move.getY()));
+            returnMoves.add(new Move(move.getX()+(i*2), move.getY()));
+            returnMoves.add(new Move(move.getX()+i, move.getY()+i));
+            returnMoves.add(new Move(move.getX()+(i*2), move.getY()+(i*2)));
+            returnMoves.add(new Move(move.getX()+(i*2), move.getY()+i));
+            returnMoves.add(new Move(move.getX()+i, move.getY()+(i*2)));
+        }
+        return returnMoves;
+    }
 
     private boolean imovesMatching (IMove move1, IMove move2){
-        if(move1.getX() == move2.getX() && move2.getX()== move2.getX()) {
+        if(move1.getX() == move2.getX() && move1.getY()== move2.getY()) {
             return true;
         }
         return false;
     }
+
+
 
     private boolean isWinningMove(String[][] board, IMove move, String player){
         boolean isRowWin = true;
