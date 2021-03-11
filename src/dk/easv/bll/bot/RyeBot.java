@@ -36,20 +36,28 @@ public class RyeBot implements IBot {
             for(IMove currentMove: winMoves) {
                 GameState gs = new GameState(state);
                 GameManager gm = new GameManager(gs);
+                gm.setCurrentPlayer(thisPlayer);
                 gm.updateGame(currentMove);
                 //If is able to win globally do it
-                if(gm.getGameOver().equals(GameManager.GameOverState.Win)) {
+                if(gm.getGameOver().equals(GameManager.GameOverState.Win)||gm.getGameOver().equals(GameManager.GameOverState.Tie)) {
                     return currentMove;
                 }
-                //check if a local win results in the opponent being able to win globally next time, if not do it
+                //check if a local win results in the opponent being able to win globally next time, if not do it (virker ik)
+                gm.setCurrentPlayer(oppPlayer);
                 List<IMove> oppWinMoves = getWinningMoves(gm.getCurrentState(), oppPlayer);
-                for(IMove currentOppMove: oppWinMoves) {
-                    GameState gs1 = new GameState(gm.getCurrentState());
-                    GameManager gm1 = new GameManager(gs1);
-                    gm1.updateGame(currentOppMove);
-                     if(!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
-                         return currentMove;
-                     }
+                if(oppWinMoves.isEmpty()){
+                    return currentMove;
+                }
+                else {
+                    for (IMove currentOppMove : oppWinMoves) {
+                        GameState gs1 = new GameState(gm.getCurrentState());
+                        GameManager gm1 = new GameManager(gs1);
+                        gm1.updateGame(currentOppMove);
+                        System.out.print(gm1.getGameOver());
+                        if (!gm1.getGameOver().equals(GameManager.GameOverState.Win)) {
+                            return currentMove;
+                        }
+                    }
                 }
             }
         }
