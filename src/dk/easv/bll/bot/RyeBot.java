@@ -62,8 +62,8 @@ public class RyeBot implements IBot {
                     GameState gs = new GameState(state);
                     GameManager gm = new GameManager(gs);
                     gm.updateGame(currentOppMove);
-                    //checks if the local block will result in the opponent winning globally, if not returns the move
-                    if(!gm.getGameOver().equals(GameManager.GameOverState.Win)){
+                    //checks if the local block vil result in the opponentWinning, if not returns the move
+                    if(gm.getGameOver().equals(GameManager.GameOverState.Win)){
                         return currentOppMove;
                     }
                 }
@@ -84,32 +84,19 @@ public class RyeBot implements IBot {
         int thisPlayer = getCurrentPlayer(state);
         int oppPlayer=(thisPlayer +1) %2;
 
-        List<IMove> macroOuterMiddleMoves = new ArrayList<>();
-        macroOuterMiddleMoves.add(new Move(0, 1));
-        macroOuterMiddleMoves.add(new Move(2, 1));
-        macroOuterMiddleMoves.add(new Move(1, 0));
-        macroOuterMiddleMoves.add(new Move(1, 2));
-
-        List<IMove> outerMiddleMoves = upscaleMoves(macroOuterMiddleMoves);
-
-
-        List<IMove> macroCornerMoves = new ArrayList<>();
-        macroCornerMoves.add(new Move(0, 0));
-        macroCornerMoves.add(new Move(2, 0));
-        macroCornerMoves.add(new Move(2, 0));
-        macroCornerMoves.add(new Move(2,2));
-        List<IMove> cornerMoves = upscaleMoves(macroCornerMoves);
-
-        List<IMove> middleMoves =new ArrayList<>();
-        middleMoves.add(new Move(1,1));
-        middleMoves.add(new Move(4, 1));
-        middleMoves.add(new Move(7, 1));
-        middleMoves.add(new Move(1,4));
-        middleMoves.add(new Move(1,7));
-        middleMoves.add(new Move(4,4));
-        middleMoves.add(new Move(4,7));
-        middleMoves.add(new Move(7,4));
-        middleMoves.add(new Move(7,7));
+        List<IMove> outerMiddleMoves = new ArrayList<>();
+            for (int j : new int[]{0, 2}) {
+                outerMiddleMoves.add(new Move(j,1));
+            }
+            for (int i : new int[]{0, 2}) {
+                outerMiddleMoves.add(new Move(1, i));
+            }
+        List<IMove> cornerMoves = new ArrayList<>();
+            for (int i : new int[]{0, 2, 2}) {
+                cornerMoves.add(new Move(i,0));
+            }
+            cornerMoves.add(new Move(2,2));
+        IMove middleMove = new Move(1,1);
 
         // removes moves that let the opponent pick from the entire board next time (skal nok laves bedre)
         List<IMove> smartMoves = new ArrayList<>();
@@ -117,34 +104,15 @@ public class RyeBot implements IBot {
             GameState gs = new GameState(state);
             GameManager gm = new GameManager(gs);
             gm.updateGame(move);
-            if(gm.getCurrentState().getField().getAvailableMoves().size()<=9){
+            if(gm.getCurrentState().getField().getAvailableMoves().size()<9){
                 smartMoves.add(move);
             }
         }
-        System.out.print(smartMoves.size());
         if(smartMoves.isEmpty()){
             smartMoves = availableMoves;
         }
 
         //adds OuterMiddleMoves
-        addMoves(state, returnMoves, oppPlayer, outerMiddleMoves, smartMoves);
-        //adds CornerMoves
-        if(returnMoves.isEmpty()) {
-            addMoves(state, returnMoves, oppPlayer, cornerMoves, smartMoves);
-        }
-        //adds middleMoves
-        if(returnMoves.isEmpty()) {
-            addMoves(state, returnMoves, oppPlayer, middleMoves, smartMoves);
-        }
-        //System.out.print(returnMoves.size());
-        if(returnMoves.isEmpty()) {
-            returnMoves = smartMoves;
-        }
-        return returnMoves;
-
-    }
-
-    private void addMoves(IGameState state, List<IMove> returnMoves, int oppPlayer, List<IMove> outerMiddleMoves, List<IMove> smartMoves) {
         for(IMove move:smartMoves) {
             for(IMove outerMiddleMove: outerMiddleMoves) {
                 if(imovesMatching(move,outerMiddleMove)&&!returnMoves.contains(move)){
@@ -157,23 +125,40 @@ public class RyeBot implements IBot {
                 }
             }
         }
-    }
+        //adds CornerMoves
+        if(returnMoves.isEmpty()) {
+            for(IMove move:smartMoves) {
+                for(IMove cornerMove: cornerMoves) {
+                    if(imovesMatching(move,cornerMove)&&!returnMoves.contains(move)){
+                        GameState gs = new GameState(state);
+                        GameManager gm = new GameManager(gs);
+                        gm.updateGame(move);
+                        if(getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()){
+                            returnMoves.add(move);
+                        }
+                    }
+                }
+            }
+        }
+        //add middleMove
+        if(returnMoves.isEmpty()) {
+            for(IMove move: smartMoves) {
+                if(imovesMatching(move,middleMove) && !returnMoves.contains(move)) {
+                    GameState gs = new GameState(state);
+                    GameManager gm = new GameManager(gs);
+                    gm.updateGame(move);
+                    if (getWinningMoves(gm.getCurrentState(), oppPlayer).isEmpty()) {
+                        returnMoves.add(move);
+                    }
+                }
+            }
+        }
 
-    private List<IMove> upscaleMoves (List<IMove> moves) {
-        List<IMove> returnMoves = new ArrayList<>();
-        for(IMove currentMove: moves) {
-            returnMoves.add(currentMove);
-            int i = 3;
-            returnMoves.add(new Move(currentMove.getX(), currentMove.getY()+i));
-            returnMoves.add(new Move(currentMove.getX(), currentMove.getY()+(i*2)));
-            returnMoves.add(new Move(currentMove.getX()+i, currentMove.getY()));
-            returnMoves.add(new Move(currentMove.getX()+(i*2), currentMove.getY()));
-            returnMoves.add(new Move(currentMove.getX()+i, currentMove.getY()+i));
-            returnMoves.add(new Move(currentMove.getX()+i, currentMove.getY()+(i*2)));
-            returnMoves.add(new Move(currentMove.getX()+(i*2), currentMove.getY()+i));
-            returnMoves.add(new Move(currentMove.getX()+(i*2), currentMove.getY()+(i*2)));
+        if(returnMoves.isEmpty()) {
+            returnMoves = smartMoves;
         }
         return returnMoves;
+
     }
 
     private boolean imovesMatching (IMove move1, IMove move2){
