@@ -129,15 +129,38 @@ public class RyeBot implements IBot {
             GameManager gm = new GameManager(gs);
             gm.updateGame(move);
             if(gm.getCurrentState().getField().getAvailableMoves().size()<=9){
-                smartMoves.add(move);
+                GameState gs1 = new GameState(gm.getCurrentState());
+                GameManager gm1 =new GameManager(gs1);
+                gm1.setCurrentPlayer(oppPlayer);
+                List<IMove> oppWinMoves = getWinningMoves(gm1.getCurrentState(), oppPlayer);
+                if(oppWinMoves.isEmpty()) {
+                    smartMoves.add(move);
+                }
             }
         }
-
+        if(smartMoves.isEmpty()) {
+            for (IMove move: availableMoves) {
+                GameState gs = new GameState(state);
+                GameManager gm = new GameManager(gs);
+                gm.updateGame(move);
+                if (gm.getCurrentState().getField().getAvailableMoves().size() <= 9) {
+                    smartMoves.add(move);
+                }
+            }
+        }
         if(smartMoves.isEmpty()){
             smartMoves = availableMoves;
         }
+        //if is able to get middle take it
+        for (IMove move: smartMoves) {
+            Move middle = new Move(4,4);
+            if(imovesMatching(move,middle)) {
+                returnMoves.add(middle);
+                return returnMoves;
+            }
+        }
 
-
+        
         //adds OuterMiddleMoves
         for(IMove move:smartMoves) {
             for(IMove outerMiddleMove: outerMiddleMoves) {
