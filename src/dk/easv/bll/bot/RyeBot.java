@@ -124,13 +124,14 @@ public class RyeBot implements IBot {
             GameState gs = new GameState(state);
             GameManager gm = new GameManager(gs);
             gm.updateGame(move);
-            if(gm.getCurrentState().getField().getAvailableMoves().size()<9){
+            if(gm.getCurrentState().getField().getAvailableMoves().size()<=9){
                 smartMoves.add(move);
             }
         }
         if(smartMoves.isEmpty()){
             smartMoves = availableMoves;
         }
+        System.out.print(smartMoves.size());
 
         //adds OuterMiddleMoves
         for(IMove move:smartMoves) {
